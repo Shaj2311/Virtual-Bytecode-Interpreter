@@ -9,6 +9,8 @@ struct
 	uint8_t* stack_top;
 } vm;
 
+typedef uint8_t byteVal_t, byteInstruction_t;
+
 typedef enum
 {
 	OP_STACK_PUSH,
@@ -38,30 +40,32 @@ void resetVm()
 	vm.stack_top = vm.stack;
 }
 
-void stack_push(uint8_t byte)
+returnCode stack_push(byteVal_t byte)
 {
 	//handle overflow
 	if (vm.stack_top == vm.stack + STACK_SIZE)
 		return ERROR_STACK_OVERFLOW;
 	*vm.stack_top = byte;		//push immediate byte to stack
 	vm.stack_top++;			//increment stack pointer
+	return SUCCESS;
 }
-void stack_pop()
+returnCode stack_pop()
 {
 	//handle underflow
 	if (vm.stack_top == vm.stack)
 		return ERROR_STACK_UNDERFLOW;
 	vm.stack_top--;			//decrement stack pointer
 	vm.accumulator = *vm.stack_top;	//pop byte from top of stack
+	return SUCCESS;
 
 }
-void interpret(uint8_t* instructions)
+returnCode interpret(byteInstruction_t* instructions)
 {
 	resetVm();
 	vm.ip = instructions; //point ip to start of instructions
 	while (1)
 	{
-		uint8_t instruction = *vm.ip;
+		byteInstruction_t instruction = *vm.ip;
 		vm.ip++;
 		switch (instruction)
 		{
@@ -71,77 +75,89 @@ void interpret(uint8_t* instructions)
 			break;
 		
 		case OP_STACK_POP:
-			stack_pop();
+			if (stack_pop() == ERROR_STACK_UNDERFLOW)
+				return ERROR_STACK_UNDERFLOW;
 			break;
 
 		case OP_ADD:
 		{
 			//store accumulator's current value
-			uint8_t accVal;
+			byteVal_t accVal;
 			accVal = vm.accumulator;
 
 			//pop top two bytes
-			stack_pop();
-			uint8_t y = vm.accumulator;
-			stack_pop();
-			uint8_t x = vm.accumulator;
+			if (stack_pop() == ERROR_STACK_UNDERFLOW)
+				return ERROR_STACK_UNDERFLOW;
+			byteVal_t y = vm.accumulator;
+			if (stack_pop() == ERROR_STACK_UNDERFLOW)
+				return ERROR_STACK_UNDERFLOW;
+			byteVal_t x = vm.accumulator;
 
 			//reset accumulator
 			vm.accumulator = accVal;
 
 			//push result
-			stack_push(x + y);
+			if (stack_push(x + y) == ERROR_STACK_OVERFLOW)
+				return ERROR_STACK_OVERFLOW;
 			break;
 		}
 		case OP_SUB:
 		{
 			//store accumulator's current value
-			uint8_t accVal;
+			byteVal_t accVal;
 			accVal = vm.accumulator;
 
 			//pop top two bytes
-			stack_pop();
-			uint8_t y = vm.accumulator;
-			stack_pop();
-			uint8_t x = vm.accumulator;
+			if (stack_pop() == ERROR_STACK_UNDERFLOW)
+				return ERROR_STACK_UNDERFLOW;
+			byteVal_t y = vm.accumulator;
+			if (stack_pop() == ERROR_STACK_UNDERFLOW)
+				return ERROR_STACK_UNDERFLOW;
+			byteVal_t x = vm.accumulator;
 
 			//reset accumulator
 			vm.accumulator = accVal;
 
 			//push result
-			stack_push(x - y);
+			if (stack_push(x - y) == ERROR_STACK_OVERFLOW)
+				return ERROR_STACK_OVERFLOW;
 			break;
 		}
 		case OP_MUL:
 		{
 			//store accumulator's current value
-			uint8_t accVal;
+			byteVal_t accVal;
 			accVal = vm.accumulator;
 
 			//pop top two bytes
-			stack_pop();
-			uint8_t y = vm.accumulator;
-			stack_pop();
-			uint8_t x = vm.accumulator;
+			if (stack_pop() == ERROR_STACK_UNDERFLOW)
+				return ERROR_STACK_UNDERFLOW;
+			byteVal_t y = vm.accumulator;
+			if (stack_pop() == ERROR_STACK_UNDERFLOW)
+				return ERROR_STACK_UNDERFLOW;
+			byteVal_t x = vm.accumulator;
 
 			//reset accumulator
 			vm.accumulator = accVal;
 
 			//push result
-			stack_push(x * y);
+			if (stack_push(x * y) == ERROR_STACK_OVERFLOW)
+				return ERROR_STACK_OVERFLOW;
 			break;
 		}
 		case OP_DIV:
 		{
 			//store accumulator's current value
-			uint8_t accVal;
+			byteVal_t accVal;
 			accVal = vm.accumulator;
 
 			//pop top two bytes
-			stack_pop();
-			uint8_t y = vm.accumulator;
-			stack_pop();
-			uint8_t x = vm.accumulator;
+			if (stack_pop() == ERROR_STACK_UNDERFLOW)
+				return ERROR_STACK_UNDERFLOW;
+			byteVal_t y = vm.accumulator;
+			if (stack_pop() == ERROR_STACK_UNDERFLOW)
+				return ERROR_STACK_UNDERFLOW;
+			byteVal_t x = vm.accumulator;
 
 			//handle zero division
 			if (y == 0)
@@ -151,7 +167,8 @@ void interpret(uint8_t* instructions)
 			vm.accumulator = accVal;
 
 			//push result
-			stack_push(x / y);
+			if (stack_push(x / y) == ERROR_STACK_OVERFLOW)
+				return ERROR_STACK_OVERFLOW;
 			break;
 		}
 		case OP_PRINT_RES:
@@ -176,5 +193,5 @@ int main()
 		OP_PRINT_RES,
 		OP_COMPLETE
 	};
-	interpret(bytecode);
+	printf("Program exited with code %d\n", interpret(bytecode));
 }

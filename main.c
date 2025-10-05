@@ -1,4 +1,4 @@
-#include "interpreter.c"
+#include "interpreter.h"
 int main()
 {
 	uint8_t bytecode[8] = {

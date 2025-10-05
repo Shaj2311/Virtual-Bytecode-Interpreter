@@ -1,8 +1,5 @@
-#ifndef INTERPRETER_H
-#define INTERPRETER_H
-#include <stdint.h>
-#include <stdio.h>
-#define STACK_SIZE 256
+#include "interpreter.h"
+
 struct
 {
 	uint8_t* ip;
@@ -11,30 +8,7 @@ struct
 	uint8_t* stack_top;
 } vm;
 
-typedef uint8_t byteVal_t, byteInstruction_t;
-
-typedef enum
-{
-	OP_STACK_PUSH,
-	OP_STACK_POP,
-	OP_ADD,
-	OP_SUB,
-	OP_MUL,
-	OP_DIV,
-	OP_PRINT_RES,
-	OP_COMPLETE
-} opcode;
-
-typedef enum
-{
-	SUCCESS,
-	ERROR_INVALID_OPCODE,
-	ERROR_STACK_OVERFLOW,
-	ERROR_STACK_UNDERFLOW,
-	ERROR_ZERO_DIV
-} returnCode;
-
-static void resetVm()
+void resetVm()
 {
 	puts("Resetting vm");
 	vm.accumulator = 0;
@@ -42,7 +16,7 @@ static void resetVm()
 	vm.stack_top = vm.stack;
 }
 
-static returnCode stack_push(byteVal_t byte)
+returnCode stack_push(byteVal_t byte)
 {
 	//handle overflow
 	if (vm.stack_top == vm.stack + STACK_SIZE)
@@ -51,7 +25,7 @@ static returnCode stack_push(byteVal_t byte)
 	vm.stack_top++;			//increment stack pointer
 	return SUCCESS;
 }
-static returnCode stack_pop()
+returnCode stack_pop()
 {
 	//handle underflow
 	if (vm.stack_top == vm.stack)
@@ -61,7 +35,7 @@ static returnCode stack_pop()
 	return SUCCESS;
 
 }
-static returnCode interpret(byteInstruction_t* instructions)
+returnCode interpret(byteInstruction_t* instructions)
 {
 	resetVm();
 	vm.ip = instructions; //point ip to start of instructions
@@ -75,7 +49,7 @@ static returnCode interpret(byteInstruction_t* instructions)
 			stack_push(*vm.ip);
 			vm.ip++;		//increment instruction pointer
 			break;
-		
+
 		case OP_STACK_POP:
 			if (stack_pop() == ERROR_STACK_UNDERFLOW)
 				return ERROR_STACK_UNDERFLOW;
@@ -185,4 +159,3 @@ static returnCode interpret(byteInstruction_t* instructions)
 	}
 	return SUCCESS;
 }
-#endif

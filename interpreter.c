@@ -46,7 +46,8 @@ returnCode interpret(byteInstruction_t* instructions)
 		switch (instruction)
 		{
 		case OP_STACK_PUSH:
-			stack_push(*vm.ip);
+			if(stack_push(*vm.ip) == ERROR_STACK_OVERFLOW)
+				return ERROR_STACK_OVERFLOW;
 			vm.ip++;		//increment instruction pointer
 			break;
 

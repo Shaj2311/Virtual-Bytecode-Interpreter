@@ -10,11 +10,5 @@ int main()
 		OP_COMPLETE
 	};
 
-	uint8_t overflowTest[1000];
-	for (int i = 0; i < 1000; i+=2)
-	{
-		overflowTest[i] = OP_STACK_PUSH;
-		overflowTest[i + 1] = 1;
-	}
-	printf("Program exited with code %d\n", interpret(overflowTest));
+	printf("Program exited with code %d\n", interpret(bytecode));
 }
